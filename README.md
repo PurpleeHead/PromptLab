@@ -1,117 +1,201 @@
 # PromptLab — AI Prompt Workspace
 
-PromptLab is a local-first workspace for creating, organizing, previewing, and reusing prompt templates. It runs without an account, cloud service, or paid AI API. Prompt content remains user data: changing the interface language does not translate or rewrite prompts.
+[**Live Demo**](https://purpleehead.github.io/PromptLab/) · [Repository](https://github.com/PurpleeHead/PromptLab)
+
+**PromptLab** is a local-first workspace for writing, organizing, previewing, and reusing AI prompt templates. It helps keep prompts structured and reusable instead of scattered across notes and documents. The app does not require an AI API key or an account for its core local workflow.
+
+> **Demo privacy note:** The demo runs in your browser. Prompts, collections, settings, and feedback are stored in browser `localStorage`; they are not automatically synced to a cloud account. Avoid entering secrets or private data. Use the JSON export to back up your work.
 
 ## Features
 
-- Create, edit, duplicate, favorite, and delete prompts
-- Search prompt titles, descriptions, bodies, and tags; filter and sort the library
-- Use `{{variable_name}}` placeholders and preview rendered text
-- Organize prompts into collections and retain edit history snapshots
-- Export workspace JSON backups and prompt CSV; import validated JSON
-- Select a dark or light theme
-- Capture feedback as a local record; this does not send it to the PromptLab team
-- Optional Supabase sign-up/sign-in screen
-- Responsive layout and reduced-motion styles
+- **Prompt library:** create, edit, duplicate, favorite, and delete prompts.
+- **Search and discovery:** search prompt titles, descriptions, bodies, and tags; filter and sort the library.
+- **Reusable templates:** use `{{variable_name}}` placeholders and preview the rendered prompt with values filled in.
+- **Collections:** group related prompts into named collections.
+- **Prompt history:** keep snapshots of edits for supported prompt workflows.
+- **Import and export:** export workspace data as JSON, export prompts as CSV, and import validated JSON backups.
+- **Personalization:** switch between dark and light themes.
+- **Responsive navigation:** use the workspace on desktop and smaller screens, including mobile sidebar controls.
+- **Local-first by default:** core prompt management works without an account or paid AI service.
+- **Optional Supabase foundation:** the repository includes authentication and database integration helpers, but full cloud synchronization is not currently exposed as a complete user workflow.
 
-**Localization limitation:** English and Russian dictionaries and locale state exist in the code, but the routed application currently has no user-accessible language selector and does not apply the dictionaries across its screens. The interface is effectively English-only. Do not rely on a Russian UI until this is completed. Prompt and other user-created content is not modified by locale state.
+## Tech stack
 
-## Architecture
+- React 19 and TypeScript
+- Vite 7
+- React Router
+- SCSS / CSS
+- Lucide React icons
+- React Hook Form and Zod
+- Supabase client (optional)
+- Vitest, Testing Library, ESLint
+- GitHub Actions and GitHub Pages
 
-- `src/app/App.tsx` — app shell, route table, most route screens, and shared workspace state (still monolithic)
-- `src/components/` — reusable UI modules
-- `src/features/` — partial feature extractions; some screen modules are not the components currently mounted by the route table
-- `src/features/prompts/variables.ts` — plain-text variable parsing and rendering
-- `src/i18n/` — locale dictionaries and locale helpers not yet wired into the routed UI
-- `src/services/storage.ts` — local persistence and JSON/CSV import/export
-- `src/services/supabase.ts` — optional Supabase auth and explicit sync helpers
-- `supabase/migrations/` — database schema and row-level security policies
-- `tests/` — Vitest unit and component tests
+## How it works
 
-## Requirements and local setup
+1. Create a prompt and add a title, description, category, tags, and body.
+2. Insert variables such as `{{topic}}` or `{{tone}}` where you want customizable values.
+3. Preview the template with sample values and reuse the result in your preferred AI tool.
+4. Keep prompts organized with favorites, filters, and collections.
+5. Export a JSON backup periodically so your local workspace can be restored later.
 
-- Node.js 22 or a compatible current LTS release
+PromptLab organizes prompts; it does not itself generate AI responses or send prompt text to an AI provider.
+
+## Run locally
+
+### Requirements
+
+- Node.js 22 (or a compatible current LTS release)
 - npm
 
-Install the exact dependency versions from the lockfile and start the development server:
-
 ```bash
+git clone https://github.com/PurpleeHead/PromptLab.git
+cd PromptLab
 npm ci
 npm run dev
 ```
 
-Open the URL Vite prints. On first use, PromptLab creates starter data in this browser profile. Data is stored locally unless you export it or explicitly choose a cloud action.
+Open the local URL printed by Vite.
 
-## Scripts
+## Available scripts
 
-| Command | Purpose |
+| Command | Description |
 | --- | --- |
-| `npm run dev` | Start the Vite development server |
-| `npm run typecheck` | Run TypeScript project checks |
+| `npm run dev` | Start the local development server |
+| `npm run typecheck` | Run TypeScript checks |
 | `npm run lint` | Run ESLint |
-| `npm run test:run` | Run unit and component tests once |
-| `npm run build` | Typecheck and build the production app into `dist/` |
-| `npm run preview` | Serve the production build locally |
+| `npm run test:run` | Run tests once |
+| `npm run build` | Typecheck and build the production app |
+| `npm run preview` | Preview the production build locally |
 
-## Environment variables and Supabase
+## Data and privacy
 
-Supabase is optional. The routed account screen provides an authentication UI when configured. Database schema and mapping/sync helper code exist, but the current routed Settings screen does not expose cloud upload/download actions, and ordinary local changes are not synchronized:
+- Prompt content, collections, settings, and feedback are stored in the current browser profile using `localStorage`.
+- Local data is not a cloud backup and can be lost if browser data is cleared or the profile/device is lost.
+- JSON is the recommended format for workspace backups; CSV is useful for tabular prompt exports but does not preserve all workspace relationships/history.
+- Feedback is stored locally in the current implementation; it is not a support ticket sent to the developer.
+- Do not save passwords, API keys, or other secrets in prompts.
+- Supabase configuration is optional. Cloud sign-in/integration code exists, but automatic sync and a complete user-facing cloud backup workflow are not currently available.
 
-1. Create a Supabase project.
-2. Apply `supabase/migrations/0001_initial_schema.sql` to that project.
-3. In Supabase Authentication settings, configure the Site URL and allowed redirect URLs for each development and production origin. Include the app URL at the root and any confirmation redirect URL you configure.
-4. Configure Supabase API allowed origins for the local development origin and the deployed site origin where that setting is available.
-5. Copy `.env.example` to `.env.local` and provide the public project URL and anon/publishable key:
+## GitHub Pages deployment
 
-   ```dotenv
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-public-anon-or-publishable-key
-   ```
+This repository contains a GitHub Actions workflow that installs dependencies, runs checks, builds the app with the `/PromptLab/` base path, and deploys the `dist` output to GitHub Pages on pushes to `main`.
 
-6. Restart Vite after changing environment values. In Supabase Auth settings, choose whether email confirmation is required. When confirmation is enabled, sign-up displays a check-your-email message; the user returns to the app to sign in after confirming. The app does not implement password reset or a dedicated confirmation callback route.
+To enable it in repository settings:
 
-Only public client configuration belongs in `VITE_*` variables. Never put a `service_role` key, database password, or other private credential in `.env.local` or a frontend build. The Supabase SQL migration enables RLS; review it and verify policies in a real project before public use.
+1. Open **Settings → Pages**.
+2. Set **Build and deployment → Source** to **GitHub Actions**.
+3. Push to `main` or run **Actions → Deploy to GitHub Pages → Run workflow**.
+4. Wait for the workflow to complete, then open the live demo link at the top of this README.
 
-Cloud behavior is not release-verified: sign-in is optional; there is no active user-facing sync action in the routed app, and prompt/collection CRUD is not automatically mirrored. The helper layer does not sync prompt history, collection membership relationships, or feedback. Do not assume local content is backed up remotely. No real Supabase project was used for the checks recorded in this repository.
+The deployment workflow must pass before the live demo is considered published. If the first deployment fails, open the Actions run to inspect the failing check.
 
-## Data, privacy, and backups
+## Current limitations
 
-Prompt records, collections, settings, and feedback are stored in browser `localStorage`. Local storage is not a cloud backup and may be cleared by the browser or lost with the browser profile/device; regularly export a JSON backup. JSON import validates prompt records and merges by default in the current interface. CSV is an export format and does not preserve version history or collection membership.
+- The app manages prompt templates; it does not call an AI model or produce generated responses.
+- Cloud authentication/synchronization is not a complete, release-verified workflow; treat the app as local-first.
+- The locale dictionaries exist in the codebase, but full user-facing localization across all routed screens is not complete. The current interface is primarily English.
+- There is no automated end-to-end browser suite configured yet.
+- No license has been selected for this repository. All rights remain with the copyright holder unless a license is added.
 
-Feedback is stored locally and is not transmitted. Prompt text remains local unless the user explicitly exports it or starts a cloud upload. Avoid placing passwords, API keys, or other secrets in prompts or feedback. Imported content is treated as data, not executable HTML or code.
+---
 
-## Localization status
+# PromptLab — рабочее пространство для AI-промптов
 
-English is the effective language of the routed UI. Locale dictionaries and a persisted locale field exist, but there is currently no active selector in the routed header or Settings screen, and translation helpers are not applied to the route screens. The i18n module has not completed product localization. User prompt text, tags, collection names, history, and imported/exported content remain user-owned values.
+[**Открыть демо**](https://purpleehead.github.io/PromptLab/) · [Репозиторий на GitHub](https://github.com/PurpleeHead/PromptLab)
 
-## Tests
+**PromptLab** — приложение для создания, организации, предварительного просмотра и повторного использования шаблонов промптов. Оно помогает хранить запросы в структурированном виде, а не разбрасывать их по заметкам и документам. Для основных локальных функций не нужны аккаунт, ключ API или платная AI-подписка.
 
-The Vitest/Testing Library suite covers variable extraction and rendering, local persistence, prompt snapshot creation, malformed and valid JSON imports, CSV escaping, Supabase row mapping, and locale helper/key-parity behavior. The locale selector component test targets a feature Settings module that is not currently mounted by the route table. The suite does not provide comprehensive component coverage for all routed workflows, and there is no configured automated end-to-end suite. The Stage 8 browser smoke checks are manual/local only.
+> **Важно о данных в демо:** приложение работает в браузере. Промпты, коллекции, настройки и обратная связь сохраняются в `localStorage` текущего браузера и автоматически не синхронизируются с облаком. Не вводите секретные или конфиденциальные данные. Для резервной копии используйте экспорт JSON.
 
-## Deployment
+## Возможности
 
-### Netlify and other root-hosted static sites
+- **Библиотека промптов:** создание, редактирование, дублирование, добавление в избранное и удаление.
+- **Поиск:** поиск по названиям, описаниям, тексту промптов и тегам, фильтрация и сортировка.
+- **Шаблоны с переменными:** поддержка плейсхолдеров вида `{{variable_name}}` и предварительный просмотр результата с подставленными значениями.
+- **Коллекции:** группировка связанных промптов.
+- **История:** сохранение снимков изменений в поддерживаемых сценариях работы с промптами.
+- **Импорт и экспорт:** резервная копия рабочего пространства в JSON, экспорт промптов в CSV и импорт проверенных JSON-файлов.
+- **Настройка интерфейса:** светлая и тёмная темы.
+- **Адаптивность:** интерфейс для компьютеров и мобильных устройств, включая мобильную боковую навигацию.
+- **Локальная работа:** управление промптами доступно без регистрации и платных AI-сервисов.
+- **Основа для интеграции с Supabase:** в проекте есть код авторизации и работы с базой данных, но полноценная пользовательская облачная синхронизация пока не реализована как законченный сценарий.
 
-Use the repository root as the base directory, `npm run build` as the build command, and `dist` as the publish directory. `netlify.toml` rewrites unmatched paths to `index.html` for SPA navigation. The default Vite base is `/`.
+## Технологии
 
-### GitHub Pages
+- React 19 и TypeScript
+- Vite 7
+- React Router
+- SCSS / CSS
+- Lucide React
+- React Hook Form и Zod
+- Supabase client (опционально)
+- Vitest, Testing Library, ESLint
+- GitHub Actions и GitHub Pages
 
-The GitHub Actions workflow builds with a base path derived from the repository name (or `/` for a `*.github.io` repository), copies the built app shell to `dist/404.html`, and deploys via the Pages artifact flow. Keep `BrowserRouter` using `import.meta.env.BASE_URL`; do not hardcode a repository name into source code. Enable **GitHub Actions** as the Pages source in repository settings.
+## Как пользоваться
 
-Local checks establish build output and route handling but do not prove a public deployment works. After enabling deployment, open and refresh a nested route on the published site and confirm assets load under its base path.
+1. Создайте промпт и заполните название, описание, категорию, теги и основной текст.
+2. Добавьте переменные, например `{{topic}}` или `{{tone}}`, чтобы переиспользовать один шаблон с разными параметрами.
+3. Проверьте шаблон в предварительном просмотре и используйте готовый текст в выбранном AI-инструменте.
+4. Организуйте библиотеку с помощью избранного, фильтров и коллекций.
+5. Периодически экспортируйте JSON, чтобы иметь резервную копию.
 
-The CI workflow runs `npm ci`, typecheck, lint, unit tests, and a production build on pushes and pull requests targeting `main`. It has read-only repository permissions and no deployment secrets. Pages deployment only runs on `main` pushes or manual dispatch and grants Pages write/ID-token permissions to the deployment job.
+PromptLab помогает организовывать промпты, но сам не генерирует ответы нейросети и не отправляет текст промптов AI-провайдерам.
 
-## Troubleshooting and limitations
+## Локальный запуск
 
-- **Local data seems missing:** check the same browser profile/origin; use a previously exported JSON backup if available.
-- **Cloud controls are unavailable:** verify both public Supabase values in `.env.local` and restart the dev server. Without them, local mode remains available.
-- **Sign-up requires confirmation:** check the email and the Supabase Auth confirmation URL configuration; confirmation behavior is controlled by the project.
-- **Nested route is not found after deployment:** confirm the hosting provider uses the configured SPA fallback and that the build base matches the deployed path.
-- **Build reports a large chunk:** Vite currently warns about the client JavaScript bundle exceeding its default size threshold; this is non-fatal and code splitting has not yet been added.
-- Supabase auth/sync, RLS isolation, email delivery, and production redirects require manual verification against a configured project.
-- There is no verified public demo URL and no Playwright end-to-end suite.
+### Требования
 
-## License
+- Node.js 22 или совместимая актуальная LTS-версия
+- npm
 
-No license has been selected. Add a license only after choosing terms for the project.
+```bash
+git clone https://github.com/PurpleeHead/PromptLab.git
+cd PromptLab
+npm ci
+npm run dev
+```
+
+Откройте локальный адрес, который выведет Vite.
+
+## Команды
+
+| Команда | Назначение |
+| --- | --- |
+| `npm run dev` | Запуск dev-сервера |
+| `npm run typecheck` | Проверка TypeScript |
+| `npm run lint` | Проверка ESLint |
+| `npm run test:run` | Однократный запуск тестов |
+| `npm run build` | Проверка типов и production-сборка |
+| `npm run preview` | Локальный просмотр production-сборки |
+
+## Данные и приватность
+
+- Промпты, коллекции, настройки и обратная связь хранятся в `localStorage` текущего браузера.
+- Локальные данные не являются облачной резервной копией и могут быть потеряны при очистке данных браузера или потере устройства.
+- Для полной резервной копии рабочего пространства используйте JSON. CSV удобен для табличного экспорта, но не сохраняет все связи и историю.
+- Обратная связь в текущей реализации хранится локально и не отправляется разработчику.
+- Не сохраняйте в промптах пароли, API-ключи и другие секреты.
+- Интеграция с Supabase необязательна. Код авторизации и интеграции присутствует, но автоматическая синхронизация и законченный облачный backup пока недоступны.
+
+## Публикация на GitHub Pages
+
+В репозитории есть GitHub Actions workflow, который устанавливает зависимости, запускает проверки, собирает приложение с базовым путём `/PromptLab/` и публикует папку `dist` при push в ветку `main`.
+
+Чтобы включить публикацию:
+
+1. Откройте **Settings → Pages**.
+2. В разделе **Build and deployment → Source** выберите **GitHub Actions**.
+3. Отправьте изменения в `main` или запустите **Actions → Deploy to GitHub Pages → Run workflow**.
+4. Дождитесь успешного завершения workflow и откройте ссылку на демо в начале README.
+
+Пока workflow не завершился успешно, демо нельзя считать опубликованным. Если первая сборка завершится ошибкой, откройте соответствующий запуск в Actions и проверьте шаг, на котором возникла проблема.
+
+## Текущие ограничения
+
+- Приложение управляет шаблонами промптов, но не вызывает AI-модель и не генерирует ответы.
+- Авторизация и синхронизация через облако пока не являются полностью реализованной и проверенной функцией; используйте приложение как локальное рабочее пространство.
+- В коде есть словари локализации, но перевод всех экранов интерфейса ещё не завершён. Основной язык текущего интерфейса — английский.
+- Автоматизированный end-to-end набор браузерных тестов пока не настроен.
+- Лицензия проекта ещё не выбрана. До добавления лицензии права остаются у правообладателя.

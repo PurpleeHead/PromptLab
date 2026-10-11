@@ -1,6 +1,6 @@
 # PromptLab — AI Prompt Workspace
 
-**PromptLab** is a responsive, local-first workspace for writing, organizing, previewing, and reusing prompt templates. It is built with React and TypeScript and supports English and Russian interface languages.
+**PromptLab** is a responsive, local-first workspace for building a reusable library of AI prompts. It helps users organize instructions, find templates quickly, customize them with variables, preview the final text, and keep useful prompts ready for repeated tasks. Built with React and TypeScript, it provides a practical foundation for a more capable AI productivity tool.
 
 - **Live demo:** https://purpleehead.github.io/PromptLab/
 - **Repository:** https://github.com/PurpleeHead/PromptLab
@@ -14,7 +14,7 @@
 - Reuse templates with variables such as `{{topic}}` and preview the rendered result.
 - Keep prompt edit-history snapshots.
 - Import validated JSON data and export workspace backups as JSON or prompts as CSV.
-- Switch between English and Russian; the interface language does not translate or rewrite saved prompts.
+- Switch the interface language without translating or rewriting saved prompts.
 - Choose a dark or light theme.
 - Use the core workspace without creating an account.
 - Access an optional Supabase sign-in/sign-up flow when configured.
@@ -132,7 +132,7 @@ No open-source license has been selected yet. Unless a license is added, the cod
 - Переменные в шаблонах, например `{{topic}}`, и предварительный просмотр готового текста.
 - Сохранение снимков истории редактирования промпта.
 - Импорт проверенных JSON-данных, экспорт резервной копии в JSON и экспорт промптов в CSV.
-- Переключение английского и русского интерфейса без перевода или изменения сохранённых промптов.
+- Переключение языка интерфейса без перевода или изменения сохранённых промптов.
 - Светлая и тёмная темы.
 - Основной функционал без регистрации.
 - Необязательная авторизация через Supabase при соответствующей настройке.

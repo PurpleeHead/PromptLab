@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Activity, ArrowDownUp, ArrowLeft, ArrowRight, BarChart3, Check, ChevronDown, CircleHelp, Command, Copy, Download, FileText, Filter, Folder, FolderPlus, Heart, LayoutDashboard, LifeBuoy, ListFilter, Menu, MoreHorizontal, Plus, Search, Settings, ShieldCheck, Sparkles, Star, Trash2, Upload, WandSparkles, X, Zap } from 'lucide-react';
-import type { AppData, FeedbackEntry, Prompt, PromptCategory, PromptCollection, PromptSort } from '../types';
-import { createId, exportCsv, exportJson, importJson, readData, savePrompt, writeData } from '../services/storage';
+import type { AppData, AppLocale, FeedbackEntry, Prompt, PromptCategory, PromptCollection, PromptSort } from '../types';
+import { createId, exportCsv, exportJson, importJson, readData, readSettings, savePrompt, writeData, writeSettings } from '../services/storage';
 import { extractVariables, renderTemplate } from '../features/prompts/variables';
 import { isCloudConfigured, supabase } from '../services/supabase';
 
@@ -11,14 +11,16 @@ const blankPrompt = { title: '', description: '', body: '', category: 'General' 
 const relativeDate = (date: string) => { const days = Math.floor((Date.now() - new Date(date).getTime()) / 86400000); if (days <= 0) return 'Today'; if (days === 1) return 'Yesterday'; if (days < 7) return `${days} days ago`; return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
 const countWords = (text: string) => text.trim() ? text.trim().split(/\s+/).length : 0;
 
-function App() {
+export default function App() {
   const [data, setData] = useState<AppData>(() => readData());
   const [toast, setToast] = useState('');
   const [mobileNav, setMobileNav] = useState(false);
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('promptlab:theme') as 'dark' | 'light') || 'dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => readSettings().theme);
+  const [locale, setLocale] = useState<AppLocale>(() => readSettings().locale);
   const location = useLocation();
   useEffect(() => { try { writeData(data); } catch { setToast('Storage is unavailable. Export your prompts to avoid losing changes.'); } }, [data]);
-  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('promptlab:theme', theme); }, [theme]);
+  useEffect(() => { document.documentElement.dataset.theme = theme; writeSettings({ theme }); }, [theme]);
+  useEffect(() => { document.documentElement.lang = locale; writeSettings({ locale }); }, [locale]);
   useEffect(() => { setMobileNav(false); }, [location.pathname]);
   useEffect(() => { if (!toast) return; const timeout = window.setTimeout(() => setToast(''), 3200); return () => window.clearTimeout(timeout); }, [toast]);
   const updateData = (updater: (current: AppData) => AppData) => setData((current) => updater(current));
@@ -27,9 +29,8 @@ function App() {
   const addPrompt = (input: typeof blankPrompt, id?: string) => { updateData((current) => savePrompt(current, input, id)); setToast(id ? 'Changes saved.' : 'Prompt created.'); };
   const duplicatePrompt = (prompt: Prompt) => { const copy = savePrompt(data, { title: `${prompt.title} copy`, description: prompt.description, body: prompt.body, category: prompt.category, tags: [...prompt.tags] }); setData(copy); setToast('Prompt duplicated.'); };
   const addCollection = (name: string, description: string) => { const collection: PromptCollection = { id: createId(), name, description, promptIds: [], createdAt: new Date().toISOString() }; updateData((current) => ({ ...current, collections: [collection, ...current.collections] })); setToast('Collection created.'); };
-  const navProps = { data, onToggleFavorite: toggleFavorite, onDeletePrompt: deletePrompt, onDuplicatePrompt: duplicatePrompt, onSavePrompt: addPrompt, onToast: setToast, onAddCollection: addCollection, onDataChange: setData, theme, onThemeChange: setTheme };
-  return <div className="app-shell"><Sidebar data={data} mobileOpen={mobileNav} onClose={() => setMobileNav(false)} /><div className="main-shell"><Topbar onMenu={() => setMobileNav(true)} data={data} /><main className="main-content"><Routes>
-    <Route path="/" element={<Dashboard {...navProps} />} />
+  const navProps = { data, onToggleFavorite: toggleFavorite, onDeletePrompt: deletePrompt, onDuplicatePrompt: duplicatePrompt, onSavePrompt: addPrompt, onToast: setToast, onAddCollection: addCollection, onDataChange: setData, theme, onThemeChange: setTheme, locale, onLocaleChange: setLocale };
+  return <div className="app-shell"><Sidebar data={data} mobileOpen={mobileNav} onClose={() => setMobileNav(false)} />  <div className="main-shell"><Topbar onMenu={() => setMobileNav(true)} /><main className="main-content"><Routes>    <Route path="/" element={<Dashboard {...navProps} />} />
     <Route path="/library" element={<Library {...navProps} />} />
     <Route path="/prompts/new" element={<Editor {...navProps} />} />
     <Route path="/prompts/:id" element={<Editor {...navProps} />} />
@@ -42,13 +43,13 @@ function App() {
   </Routes></main><footer className="app-footer"><span>Made for thoughtful prompting <span className="footer-sparkle">✳</span></span><span>PromptLab <span className="footer-dot">·</span> Local-first workspace</span></footer></div>{toast && <div className="toast" role="status"><span className="toast-icon"><Check size={16} /></span>{toast}<button aria-label="Dismiss notification" onClick={() => setToast('')}><X size={15} /></button></div>}</div>;
 }
 
-type SharedProps = { data: AppData; onToggleFavorite: (id: string) => void; onDeletePrompt: (id: string) => void; onDuplicatePrompt: (prompt: Prompt) => void; onSavePrompt: (input: typeof blankPrompt, id?: string) => void; onToast: (message: string) => void; onAddCollection: (name: string, description: string) => void; onDataChange: (data: AppData) => void; theme: 'dark' | 'light'; onThemeChange: (theme: 'dark' | 'light') => void };
+type SharedProps = { data: AppData; onToggleFavorite: (id: string) => void; onDeletePrompt: (id: string) => void; onDuplicatePrompt: (prompt: Prompt) => void; onSavePrompt: (input: typeof blankPrompt, id?: string) => void; onToast: (message: string) => void; onAddCollection: (name: string, description: string) => void; onDataChange: (data: AppData) => void; theme: 'dark' | 'light'; onThemeChange: (theme: 'dark' | 'light') => void; locale: AppLocale; onLocaleChange: (locale: AppLocale) => void };
 function Sidebar({ data, mobileOpen, onClose }: { data: AppData; mobileOpen: boolean; onClose: () => void }) {
   const primary = [{ to: '/', label: 'Overview', icon: LayoutDashboard }, { to: '/library', label: 'Prompt library', icon: FileText }, { to: '/collections', label: 'Collections', icon: Folder }, { to: '/favorites', label: 'Favorites', icon: Heart }];
   const bottom = [{ to: '/settings', label: 'Settings', icon: Settings }, { to: '/feedback', label: 'Send feedback', icon: LifeBuoy }];
   return <><div className={`mobile-overlay ${mobileOpen ? 'is-visible' : ''}`} onClick={onClose} /><aside className={`sidebar ${mobileOpen ? 'sidebar-open' : ''}`}><div className="brand-row"><Link to="/" className="brand-mark"><span className="brand-icon"><Command size={20} strokeWidth={2.3} /></span><span className="brand-word">prompt<span>lab</span><sup>✳</sup></span></Link><button className="icon-button mobile-close" aria-label="Close navigation" onClick={onClose}><X size={18} /></button></div><button className="workspace-switcher"><span className="workspace-avatar">P</span><span className="workspace-meta"><strong>Personal workspace</strong><small>Free plan</small></span><ChevronDown size={15} className="muted-icon" /></button><div className="sidebar-label">WORKSPACE</div><nav className="nav-list">{primary.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}><Icon size={18} strokeWidth={1.8} /><span>{label}</span>{label === 'Prompt library' && <span className="nav-count">{data.prompts.length}</span>}{label === 'Favorites' && data.prompts.some((p) => p.favorite) && <span className="nav-count">{data.prompts.filter((p) => p.favorite).length}</span>}</NavLink>)}</nav><div className="sidebar-label collections-label"><span>YOUR COLLECTIONS</span><span>{data.collections.length}</span></div><div className="sidebar-collections">{data.collections.slice(0, 5).map((collection, i) => <NavLink key={collection.id} to={`/collections?open=${collection.id}`} className="collection-nav"><span className={`collection-color color-${i % 4}`} /><span>{collection.name}</span><span className="collection-num">{collection.promptIds.length}</span></NavLink>)}{data.collections.length === 0 && <span className="sidebar-empty">No collections yet</span>}<NavLink to="/collections" className="add-collection-link"><Plus size={14} /> New collection</NavLink></div><div className="sidebar-bottom"><div className="upgrade-card"><span className="upgrade-orb"><Sparkles size={17} /></span><strong>Your ideas, organized.</strong><p>A calm space for your best prompts.</p><Link to="/library">Explore library <ArrowRight size={13} /></Link></div>{bottom.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} className={({ isActive }) => `nav-link bottom-link ${isActive ? 'active' : ''}`}><Icon size={17} /><span>{label}</span></NavLink>)}<div className="sidebar-user"><div className="user-avatar">PL</div><div className="user-meta"><strong>Local workspace</strong><small>Data stored on this device</small></div><MoreHorizontal size={17} className="muted-icon" /></div></div></aside></>;
 }
-function Topbar({ onMenu, data }: { onMenu: () => void; data: AppData }) {
+function Topbar({ onMenu }: { onMenu: () => void }) {
   const location = useLocation(); const titleMap: Record<string, string> = { '/': 'Overview', '/library': 'Prompt library', '/collections': 'Collections', '/favorites': 'Favorites', '/settings': 'Settings', '/feedback': 'Feedback', '/auth': 'Account' }; const currentTitle = titleMap[location.pathname] ?? (location.pathname.includes('/prompts/') ? 'Prompt studio' : 'Workspace');
   return <header className="topbar"><div className="topbar-left"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={onMenu}><Menu size={19} /></button><div className="breadcrumbs"><span>Workspace</span><span className="crumb-slash">/</span><strong>{currentTitle}</strong></div></div><div className="topbar-actions"><Link to="/feedback" className="topbar-help" aria-label="Help and feedback"><CircleHelp size={17} /></Link><span className="topbar-divider" /><div className="topbar-avatar" title="Local workspace">PL</div><Link to="/auth" className="account-link">Sign in <ArrowRight size={13} /></Link><Link to="/prompts/new" className="button button-primary button-small top-create"><Plus size={15} /> New prompt</Link></div></header>;
 }
@@ -68,7 +69,7 @@ function PromptRow({ prompt, onToggleFavorite }: { prompt: Prompt; onToggleFavor
 function EmptyState({ icon, title, text, action }: { icon: ReactNode; title: string; text: string; action?: ReactNode }) { return <div className="empty-state"><span className="empty-icon">{icon}</span><h3>{title}</h3><p>{text}</p>{action}</div>; }
 
 function Library(props: SharedProps) {
-  const navigate = useNavigate(); const [query, setQuery] = useState(''); const [category, setCategory] = useState('All categories'); const [tag, setTag] = useState(''); const [favoritesOnly, setFavoritesOnly] = useState(false); const [sort, setSort] = useState<PromptSort>('updated'); const [view, setView] = useState<'grid' | 'list'>('grid'); const [showFilters, setShowFilters] = useState(false);
+  const [query, setQuery] = useState(''); const [category, setCategory] = useState('All categories'); const [tag, setTag] = useState(''); const [favoritesOnly, setFavoritesOnly] = useState(false); const [sort, setSort] = useState<PromptSort>('updated'); const [view, setView] = useState<'grid' | 'list'>('grid'); const [showFilters, setShowFilters] = useState(false);
   const allTags = useMemo(() => [...new Set(props.data.prompts.flatMap((p) => p.tags))].sort(), [props.data.prompts]);
   const filtered = useMemo(() => props.data.prompts.filter((p) => { const q = query.toLowerCase().trim(); const matchQuery = !q || [p.title, p.description, p.body, ...p.tags].some((v) => v.toLowerCase().includes(q)); return matchQuery && (category === 'All categories' || p.category === category) && (!tag || p.tags.includes(tag)) && (!favoritesOnly || p.favorite); }).sort((a, b) => sort === 'title' ? a.title.localeCompare(b.title) : sort === 'newest' ? b.createdAt.localeCompare(a.createdAt) : sort === 'oldest' ? a.createdAt.localeCompare(b.createdAt) : b.updatedAt.localeCompare(a.updatedAt)), [props.data.prompts, query, category, tag, favoritesOnly, sort]);
   const reset = () => { setQuery(''); setCategory('All categories'); setTag(''); setFavoritesOnly(false); setSort('updated'); };
@@ -86,7 +87,7 @@ function CategoryIcon({ category }: { category: string }) { if (category === 'De
 
 function Editor(props: SharedProps) {
   const { id } = useParams(); const navigate = useNavigate(); const existing = id ? props.data.prompts.find((p) => p.id === id) : undefined; const [form, setForm] = useState(() => existing ? { title: existing.title, description: existing.description, body: existing.body, category: existing.category, tags: [...existing.tags] } : { ...blankPrompt }); const [tagInput, setTagInput] = useState(''); const [values, setValues] = useState<Record<string, string>>({}); const [showVersions, setShowVersions] = useState(false); const [showRendered, setShowRendered] = useState(true); const [savedAt, setSavedAt] = useState(existing?.updatedAt ?? ''); const [errors, setErrors] = useState<string[]>([]); const originalRef = useRef(JSON.stringify(form));
-  useEffect(() => { if (existing) { const next = { title: existing.title, description: existing.description, body: existing.body, category: existing.category, tags: [...existing.tags] }; setForm(next); originalRef.current = JSON.stringify(next); setSavedAt(existing.updatedAt); } }, [id]);
+  useEffect(() => { if (existing) { const next = { title: existing.title, description: existing.description, body: existing.body, category: existing.category, tags: [...existing.tags] }; setForm(next); originalRef.current = JSON.stringify(next); setSavedAt(existing.updatedAt); } }, [id, existing]);
   const variables = extractVariables(form.body); const rendered = renderTemplate(form.body, values); const dirty = JSON.stringify(form) !== originalRef.current;
   const setField = <K extends keyof typeof blankPrompt>(key: K, value: (typeof blankPrompt)[K]) => setForm((current) => ({ ...current, [key]: value }));
   const addTag = () => { const clean = tagInput.trim().replace(/^#/, ''); if (clean && !form.tags.some((t) => t.toLowerCase() === clean.toLowerCase())) setField('tags', [...form.tags, clean]); setTagInput(''); };

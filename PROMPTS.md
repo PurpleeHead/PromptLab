@@ -6,15 +6,15 @@ This file documents the intended AI-assisted engineering workflow. Update it wit
 
 **Goal:** Build a local-first, responsive prompt workspace with prompt CRUD, search and filters, categories and tags, favorites, variable rendering, collections, version snapshots, JSON import, CSV export, settings, feedback capture, and optional Supabase authentication.
 
-**Core constraints:** React + TypeScript + Vite + SCSS; English UI and documentation; no paid AI API requirement; no mandatory registration; no privileged secrets in frontend code; separate modules; automated tests; deployment instructions.
+**Core constraints:** React + TypeScript + Vite + SCSS; English developer documentation with English/Russian UI support in progress; no paid AI API requirement; no mandatory registration; no privileged secrets in frontend code; separate modules; automated tests; deployment instructions.
 
 ## Implementation phases
 
 ### 1. Foundation and visual system
 
-**Prompt used:**
+**Initial prompt used:**
 
-> Build a premium, responsive React + TypeScript + Vite application called PromptLab. Use SCSS, a feature-oriented structure, accessible controls, a graphite dark theme with violet accents, subtle motion, reduced-motion support, reusable components, and an English-only interface. Add build, typecheck, lint, and test scripts. Do not create decorative controls that imply functionality that does not exist.
+> Build a premium, responsive React + TypeScript + Vite application called PromptLab. Use SCSS, a feature-oriented structure, accessible controls, a graphite dark theme with violet accents, subtle motion, reduced-motion support, reusable components, and an English interface. Add build, typecheck, lint, and test scripts. Do not create decorative controls that imply functionality that does not exist.
 
 **Manual review:** Inspect responsive layout, color contrast, keyboard focus, reduced-motion behavior, and actual control behavior.
 
@@ -64,7 +64,24 @@ This file documents the intended AI-assisted engineering workflow. Update it wit
 
 - Local prompt data is stored in a versioned browser-storage record.
 - Prompt variable parsing and rendering are pure functions.
-- The current account page can call Supabase Auth when configured.
-- Supabase prompt CRUD and local/cloud synchronization are not implemented yet.
+- The account page can call Supabase Auth when configured. The current optional cloud actions explicitly upload or download prompt and collection records; ordinary local edits are not automatically synchronized.
+- Cloud sync does not currently include prompt history, collection membership relationships, or feedback; conflicts may be skipped rather than resolved interactively.
 - Feedback is currently saved locally and is not sent to an external inbox.
 - The SQL migration is a starter schema; review RLS and add server-side rate limiting before exposing public feedback submission.
+- English and Russian locale values are supported and persisted, but translation coverage for every route and state is incomplete. Prompt/user content is never translated.
+- Vite's default base is `/`; `BrowserRouter` uses `import.meta.env.BASE_URL`. The GitHub Pages workflow supplies a repository-derived base and publishes `404.html` for SPA route fallback. Netlify serves the app at `/` and rewrites unmatched routes to the app shell.
+- CI uses `npm ci` with the committed `package-lock.json`.
+
+## Stage 7 — Deployment preparation
+
+Verified source configuration before changes: the router already uses Vite's `BASE_URL`; Vite's configured `/` base was redundant because it is the default. The GitHub Pages workflow previously hardcoded `/promptlab/`, used `npm install`, and omitted lint. Netlify already had an SPA rewrite.
+
+Changes made for this stage:
+
+- Removed the redundant Vite base setting so the default is root hosting and the Pages workflow can supply its base at build time.
+- Made Pages base selection derive from the repository name, with `/` for `*.github.io` repositories; retained `404.html` fallback.
+- Changed CI and Pages builds to `npm ci`, and added lint to the Pages validation flow.
+- Restricted CI permissions to repository read; scoped Pages read permission to the build job and Pages write/ID-token permissions to the deploy job.
+- Expanded deployment, setup, data-boundary, localization, and limitation documentation; added Open Graph metadata.
+
+Verification results belong in `PROJECT_STATUS.md`; do not infer a live deployment from a successful local build.

@@ -3,25 +3,35 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-permissions:
-  contents: read
-  pages: write
-  id-token: write
 concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+          cache: npm
+      - run: npm ci
       - run: npm run typecheck
+      - run: npm run lint
       - run: npm run test:run
-      - run: npm run build -- --base=/promptlab/
+      - name: Build for GitHub Pages path
+        shell: bash
+        run: |
+          repository_name="${GITHUB_REPOSITORY#*/}"
+          if [[ "$repository_name" == *.github.io ]]; then
+            base_path="/"
+          else
+            base_path="/${repository_name}/"
+          fi
+          npm run build -- --base="$base_path"
       - name: Add SPA fallback for GitHub Pages
         run: cp dist/index.html dist/404.html
       - name: Configure Pages
@@ -31,6 +41,9 @@ jobs:
         with:
           path: dist
   deploy:
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

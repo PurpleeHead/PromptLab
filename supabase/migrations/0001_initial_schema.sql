@@ -10,6 +10,7 @@ create table public.profiles (
 create table public.prompts (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users(id) on delete cascade,
+  local_id text,
   title text not null check (char_length(title) between 1 and 160),
   description text not null default '',
   body text not null default '',
@@ -17,31 +18,41 @@ create table public.prompts (
   tags text[] not null default '{}',
   is_favorite boolean not null default false,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint prompts_local_id_unique_per_user unique(owner_id, local_id)
+  deferrable initially deferred
 );
 create index prompts_owner_updated_idx on public.prompts(owner_id, updated_at desc);
 create index prompts_owner_category_idx on public.prompts(owner_id, category);
 create index prompts_tags_idx on public.prompts using gin(tags);
+create unique index prompts_owner_local_id_unique on public.prompts(owner_id, local_id) where local_id is not null;
 
 create table public.prompt_versions (
   id uuid primary key default gen_random_uuid(),
   prompt_id uuid not null references public.prompts(id) on delete cascade,
   owner_id uuid not null references auth.users(id) on delete cascade,
+  local_id text,
   version_number integer not null check (version_number > 0),
   snapshot jsonb not null,
   created_at timestamptz not null default now(),
-  unique(prompt_id, version_number)
+  unique(prompt_id, version_number),
+  unique(prompt_id, local_id)
 );
+create unique index prompt_versions_owner_local_id_unique on public.prompt_versions(owner_id, local_id) where local_id is not null;
 
 create table public.collections (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users(id) on delete cascade,
+  local_id text,
   name text not null check (char_length(name) between 1 and 100),
   description text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique(owner_id, name)
+  unique(owner_id, name),
+  constraint collections_local_id_unique_per_user unique(owner_id, local_id)
+  deferrable initially deferred
 );
+create unique index collections_owner_local_id_unique on public.collections(owner_id, local_id) where local_id is not null;
 
 create table public.collection_prompts (
   collection_id uuid not null references public.collections(id) on delete cascade,

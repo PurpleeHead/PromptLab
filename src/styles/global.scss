@@ -1,5 +1,6 @@
 @use './tokens';
 @use './mixins' as *;
+@use './i18n';
 * { box-sizing: border-box; }
 html { min-width: 320px; scroll-behavior: smooth; background: var(--bg); }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; -webkit-font-smoothing: antialiased; }

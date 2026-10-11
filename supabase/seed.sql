@@ -1,0 +1,3 @@
+-- Optional development seed placeholder.
+-- Demo prompts are seeded by the local-first frontend. Cloud seeds should be created
+-- only through an authenticated test account or a trusted development-only script.

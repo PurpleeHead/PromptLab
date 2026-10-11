@@ -1,0 +1,4 @@
+@mixin focus-ring { outline: 2px solid var(--primary); outline-offset: 2px; }
+@mixin panel { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 15px; }
+@mixin muted { color: var(--muted); }
+@mixin hover-lift { transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease; &:hover { transform: translateY(-2px); border-color: rgba(148,132,255,.35); box-shadow: 0 12px 28px rgba(0,0,0,.08); } }

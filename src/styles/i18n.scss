@@ -1,0 +1,48 @@
+.locale-switch {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+}
+
+.locale-switch button {
+  min-height: 29px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.locale-switch button.selected {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.locale-switch button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .topbar-actions {
+    gap: 7px;
+  }
+
+  .locale-switch {
+    gap: 1px;
+    padding: 2px;
+  }
+
+  .locale-switch button {
+    min-height: 27px;
+    padding: 0 5px;
+  }
+}

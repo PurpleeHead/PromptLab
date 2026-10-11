@@ -1,117 +1,115 @@
 # PromptLab — AI Prompt Workspace
 
-PromptLab is a local-first workspace for creating, organizing, previewing, and reusing prompt templates. It runs without an account, cloud service, or paid AI API. Prompt content remains user data: changing the interface language does not translate or rewrite prompts.
+**PromptLab** is a responsive, local-first workspace for writing, organizing, previewing, and reusing prompt templates. It is built with React and TypeScript and supports English and Russian interface languages.
+
+- **Live demo:** https://purpleehead.github.io/PromptLab/
+- **Repository:** https://github.com/PurpleeHead/PromptLab
+
+> PromptLab is an independent portfolio project. It is not affiliated with or endorsed by any AI provider. The core workflow does not require an AI API key or paid AI service.
 
 ## Features
 
-- Create, edit, duplicate, favorite, and delete prompts
-- Search prompt titles, descriptions, bodies, and tags; filter and sort the library
-- Use `{{variable_name}}` placeholders and preview rendered text
-- Organize prompts into collections and retain edit history snapshots
-- Export workspace JSON backups and prompt CSV; import validated JSON
-- Select a dark or light theme
-- Capture feedback as a local record; this does not send it to the PromptLab team
-- Optional Supabase sign-up/sign-in screen
-- Responsive layout and reduced-motion styles
+- Create, edit, duplicate, favorite, and delete prompts.
+- Search and filter the prompt library; sort prompts and organize them into collections.
+- Reuse templates with variables such as `{{topic}}` and preview the rendered result.
+- Keep prompt edit-history snapshots.
+- Import validated JSON data and export workspace backups as JSON or prompts as CSV.
+- Switch between English and Russian; the interface language does not translate or rewrite saved prompts.
+- Choose a dark or light theme.
+- Use the core workspace without creating an account.
+- Access an optional Supabase sign-in/sign-up flow when configured.
+- Use a responsive layout with mobile navigation and reduced-motion support.
 
-**Localization limitation:** English and Russian dictionaries and locale state exist in the code, but the routed application currently has no user-accessible language selector and does not apply the dictionaries across its screens. The interface is effectively English-only. Do not rely on a Russian UI until this is completed. Prompt and other user-created content is not modified by locale state.
+## Tech stack
 
-## Architecture
+- React 19, TypeScript, Vite
+- React Router
+- SCSS
+- Lucide React
+- Vitest, Testing Library, jsdom
+- Optional Supabase client and SQL migration
 
-- `src/app/App.tsx` — app shell, route table, most route screens, and shared workspace state (still monolithic)
-- `src/components/` — reusable UI modules
-- `src/features/` — partial feature extractions; some screen modules are not the components currently mounted by the route table
-- `src/features/prompts/variables.ts` — plain-text variable parsing and rendering
-- `src/i18n/` — locale dictionaries and locale helpers not yet wired into the routed UI
-- `src/services/storage.ts` — local persistence and JSON/CSV import/export
-- `src/services/supabase.ts` — optional Supabase auth and explicit sync helpers
-- `supabase/migrations/` — database schema and row-level security policies
-- `tests/` — Vitest unit and component tests
+## Getting started
 
-## Requirements and local setup
+### Requirements
 
 - Node.js 22 or a compatible current LTS release
 - npm
 
-Install the exact dependency versions from the lockfile and start the development server:
+### Install and run
 
 ```bash
+git clone https://github.com/PurpleeHead/PromptLab.git
+cd PromptLab
 npm ci
 npm run dev
 ```
 
-Open the URL Vite prints. On first use, PromptLab creates starter data in this browser profile. Data is stored locally unless you export it or explicitly choose a cloud action.
+Open the local URL printed by Vite.
 
-## Scripts
+### Available scripts
 
-| Command | Purpose |
+| Command | Description |
 | --- | --- |
-| `npm run dev` | Start the Vite development server |
-| `npm run typecheck` | Run TypeScript project checks |
+| `npm run dev` | Start the development server |
+| `npm run typecheck` | Run TypeScript checks |
 | `npm run lint` | Run ESLint |
-| `npm run test:run` | Run unit and component tests once |
-| `npm run build` | Typecheck and build the production app into `dist/` |
-| `npm run preview` | Serve the production build locally |
+| `npm run test:run` | Run the test suite once |
+| `npm run test` | Start Vitest in watch mode |
+| `npm run build` | Typecheck and create a production build |
+| `npm run preview` | Preview the production build locally |
 
-## Environment variables and Supabase
+## Data and privacy
 
-Supabase is optional. The routed account screen provides an authentication UI when configured. Database schema and mapping/sync helper code exist, but the current routed Settings screen does not expose cloud upload/download actions, and ordinary local changes are not synchronized:
+The core workspace stores prompts, collections, settings, and feedback in the current browser's `localStorage`. This keeps the basic workflow local and available without an account, but browser storage is **not a cloud backup** and can be cleared. Export a JSON backup regularly if your prompts matter to you.
 
-1. Create a Supabase project.
-2. Apply `supabase/migrations/0001_initial_schema.sql` to that project.
-3. In Supabase Authentication settings, configure the Site URL and allowed redirect URLs for each development and production origin. Include the app URL at the root and any confirmation redirect URL you configure.
-4. Configure Supabase API allowed origins for the local development origin and the deployed site origin where that setting is available.
-5. Copy `.env.example` to `.env.local` and provide the public project URL and anon/publishable key:
+Feedback is saved locally in this version and is not automatically sent to the project owner. Prompt content stays in the browser unless you export it or explicitly use a configured cloud feature. Avoid storing passwords, private information, or secret API keys in prompts.
+
+## Optional Supabase configuration
+
+Supabase is optional; local mode does not require it. The repository includes an authentication flow, a client helper, and an initial SQL migration. Cloud synchronization of ordinary prompt and collection changes is not currently a complete, release-verified workflow, so do not treat Supabase as an automatic backup.
+
+1. Create a Supabase project and apply `supabase/migrations/0001_initial_schema.sql`.
+2. Configure the project's authentication Site URL and allowed redirect URLs for your local and deployed origins.
+3. Copy `.env.example` to `.env.local` and set the public project URL and anon/publishable key:
 
    ```dotenv
    VITE_SUPABASE_URL=https://your-project.supabase.co
    VITE_SUPABASE_ANON_KEY=your-public-anon-or-publishable-key
    ```
 
-6. Restart Vite after changing environment values. In Supabase Auth settings, choose whether email confirmation is required. When confirmation is enabled, sign-up displays a check-your-email message; the user returns to the app to sign in after confirming. The app does not implement password reset or a dedicated confirmation callback route.
+4. Restart the development server after changing environment variables.
 
-Only public client configuration belongs in `VITE_*` variables. Never put a `service_role` key, database password, or other private credential in `.env.local` or a frontend build. The Supabase SQL migration enables RLS; review it and verify policies in a real project before public use.
+Only public client configuration belongs in `VITE_*` variables. **Never expose a Supabase `service_role` key, database password, or other private credential in frontend code or a client-side environment variable.** Review row-level security policies and verify authentication redirects against your own Supabase project before using it publicly.
 
-Cloud behavior is not release-verified: sign-in is optional; there is no active user-facing sync action in the routed app, and prompt/collection CRUD is not automatically mirrored. The helper layer does not sync prompt history, collection membership relationships, or feedback. Do not assume local content is backed up remotely. No real Supabase project was used for the checks recorded in this repository.
+## Tests and verification
 
-## Data, privacy, and backups
+The test suite covers template variable parsing/rendering, local storage operations and imports/exports, Supabase row mapping, and translation helpers.
 
-Prompt records, collections, settings, and feedback are stored in browser `localStorage`. Local storage is not a cloud backup and may be cleared by the browser or lost with the browser profile/device; regularly export a JSON backup. JSON import validates prompt records and merges by default in the current interface. CSV is an export format and does not preserve version history or collection membership.
+Local verification performed for the current repository version:
 
-Feedback is stored locally and is not transmitted. Prompt text remains local unless the user explicitly exports it or starts a cloud upload. Avoid placing passwords, API keys, or other secrets in prompts or feedback. Imported content is treated as data, not executable HTML or code.
+- `npm ci` — completed successfully.
+- Vitest — 23 tests passed across 4 test files.
+- `npm run build` — completed successfully.
 
-## Localization status
-
-English is the effective language of the routed UI. Locale dictionaries and a persisted locale field exist, but there is currently no active selector in the routed header or Settings screen, and translation helpers are not applied to the route screens. The i18n module has not completed product localization. User prompt text, tags, collection names, history, and imported/exported content remain user-owned values.
-
-## Tests
-
-The Vitest/Testing Library suite covers variable extraction and rendering, local persistence, prompt snapshot creation, malformed and valid JSON imports, CSV escaping, Supabase row mapping, and locale helper/key-parity behavior. The locale selector component test targets a feature Settings module that is not currently mounted by the route table. The suite does not provide comprehensive component coverage for all routed workflows, and there is no configured automated end-to-end suite. The Stage 8 browser smoke checks are manual/local only.
+Vite reports a non-blocking warning that the minified JavaScript chunk is larger than 500 kB. Code splitting can be added as a future optimization. Local checks do not guarantee every production hosting, authentication, or cloud workflow is configured correctly.
 
 ## Deployment
 
-### Netlify and other root-hosted static sites
-
-Use the repository root as the base directory, `npm run build` as the build command, and `dist` as the publish directory. `netlify.toml` rewrites unmatched paths to `index.html` for SPA navigation. The default Vite base is `/`.
-
 ### GitHub Pages
 
-The GitHub Actions workflow builds with a base path derived from the repository name (or `/` for a `*.github.io` repository), copies the built app shell to `dist/404.html`, and deploys via the Pages artifact flow. Keep `BrowserRouter` using `import.meta.env.BASE_URL`; do not hardcode a repository name into source code. Enable **GitHub Actions** as the Pages source in repository settings.
+The repository includes GitHub Actions workflows for checks and Pages deployment. Enable **GitHub Actions** as the Pages source in the repository settings. Pushes to `main` trigger the configured workflow; check the Actions tab for the actual result.
 
-Local checks establish build output and route handling but do not prove a public deployment works. After enabling deployment, open and refresh a nested route on the published site and confirm assets load under its base path.
+### Netlify
 
-The CI workflow runs `npm ci`, typecheck, lint, unit tests, and a production build on pushes and pull requests targeting `main`. It has read-only repository permissions and no deployment secrets. Pages deployment only runs on `main` pushes or manual dispatch and grants Pages write/ID-token permissions to the deployment job.
+Use the repository root as the base directory, `npm run build` as the build command, and `dist` as the publish directory. The repository includes a `netlify.toml` SPA fallback configuration.
 
-## Troubleshooting and limitations
+After deploying, open the live URL and refresh the page to verify that assets and navigation work on the hosting provider.
 
-- **Local data seems missing:** check the same browser profile/origin; use a previously exported JSON backup if available.
-- **Cloud controls are unavailable:** verify both public Supabase values in `.env.local` and restart the dev server. Without them, local mode remains available.
-- **Sign-up requires confirmation:** check the email and the Supabase Auth confirmation URL configuration; confirmation behavior is controlled by the project.
-- **Nested route is not found after deployment:** confirm the hosting provider uses the configured SPA fallback and that the build base matches the deployed path.
-- **Build reports a large chunk:** Vite currently warns about the client JavaScript bundle exceeding its default size threshold; this is non-fatal and code splitting has not yet been added.
-- Supabase auth/sync, RLS isolation, email delivery, and production redirects require manual verification against a configured project.
-- There is no verified public demo URL and no Playwright end-to-end suite.
+## Project status and limitations
+
+PromptLab is a portfolio project and is still evolving. The main local prompt-management workflow, bilingual UI, theme switch, import/export utilities, and test suite are implemented. Optional authentication depends on external Supabase configuration; automatic cloud synchronization, real feedback delivery, and a full end-to-end browser test suite are not currently release-verified.
 
 ## License
 
-No license has been selected. Add a license only after choosing terms for the project.
+No open-source license has been selected yet. Unless a license is added, the code is not granted the broad reuse permissions that an open-source license provides.

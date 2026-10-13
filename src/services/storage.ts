@@ -32,7 +32,7 @@ const starterPrompts: Prompt[] = [
   { id: 'p-ux-audit', title: 'UX Audit Partner', description: 'Audit a digital flow and prioritize usability improvements.', body: 'Act as a senior UX designer. Audit {{product_or_flow}} for {{primary_task}}.\n\nUsers: {{user_group}}\nKnown issues: {{known_issues}}\n\nReturn a prioritized list of usability findings with evidence, user impact, severity, suggested improvements, and validation methods. Clearly label hypotheses that require user research.', category: 'Design', tags: ['ux', 'audit', 'product'], favorite: false, createdAt: now(), updatedAt: now(), versions: [] },
 ];
 
-const defaultSettings: AppSettings = { theme: 'dark', locale: 'en' };
+const defaultSettings: AppSettings = { theme: 'light', locale: 'en' };
 
 function detectBrowserLocale(): AppSettings['locale'] {
   return typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en';
